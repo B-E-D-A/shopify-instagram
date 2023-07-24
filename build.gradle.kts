@@ -15,7 +15,6 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation ("com.fasterxml.jackson.core:jackson-databind:2.12.5")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 }
 
