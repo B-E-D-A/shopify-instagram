@@ -2,6 +2,11 @@ import java.net.URI
 import java.net.http.*
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.annotation.*
+import kotlinx.serialization.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 
 data class Item @JsonCreator(mode = JsonCreator.Mode.PROPERTIES) constructor(
     @JsonProperty("id") val id: Long,
@@ -52,20 +57,24 @@ fun main() {
 
     val response = client.send(request, HttpResponse.BodyHandlers.ofString())
     val response_status = response.statusCode();
-    var response_body : String? = if (response_status==200) response.body() else "error $response_status"
+    var response_body : String = if (response_status==200) response.body() else "error $response_status"
     println("Response body: $response_body")
 
     val mapper = ObjectMapper()
+
+    val json: Map<String, JsonElement> = Json.parseToJsonElement(response_body).jsonObject
+    println(json["products"]!!.jsonArray[0].jsonObject.keys)
+
 //    mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
-    val items = mapper.readValue(response_body?.trimIndent(), Products::class.java)
-    for (item in items) {
-        println("ID: ${item.id},\n" +
-                "Title: ${item.title},\n" +
-                "Product Type: ${item.product_type},\n" +
-                "Created At: ${item.created_at},\n" +
-                "Updated At: ${item.updated_at},\n" +
-                "Published At: ${item.published_at},\n" +
-                "Price: ${item.price}")
-    }
+//    val items = mapper.readValue(response_body?.trimIndent(), Products::class.java)
+//    for (item in items) {
+//        println("ID: ${item.id},\n" +
+//                "Title: ${item.title},\n" +
+//                "Product Type: ${item.product_type},\n" +
+//                "Created At: ${item.created_at},\n" +
+//                "Updated At: ${item.updated_at},\n" +
+//                "Published At: ${item.published_at},\n" +
+//                "Price: ${item.price}")
+//    }
 }
