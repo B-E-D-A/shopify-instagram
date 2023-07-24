@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.8.21"
     application
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 group = "org.example"
@@ -14,8 +15,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation ("com.fasterxml.jackson.core:jackson-databind:2.12.5")
-//    implementation ("com.beust:klaxon:5.5")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 }
 
 tasks.test {
