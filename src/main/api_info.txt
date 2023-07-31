@@ -2,7 +2,5 @@ API KEY = 7503178a66dc04109c26eacc58aaf568
 API SECRET KEY = c2454e3cd312571a8eabf060c851e108
 API ACCESS TOKEN = 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
 
-curl запрос:
-curl -X GET https://eat-shop-sleep-and-repeat.myshopify.com/admin/products.json \
--H "Content-Type: application/json" \
--H "X-Shopify-Access-Token: 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"
+INSTAGRAM API ACCESS TOKEN = EAAJUFwh4Qu8BAMdWl7gnPZBbO5PgNlDKs4xP1wEp1lWGdSg3TKcBzbV5G7zLaSzaPInkRRyEArJKY71YNZBJUyft7QT96vTWx5sdxNZBOjSWVqKatJ1agNNNGnaaccJXkQqDH3aHjMZBIPnLtgK5SdgyG9GHrfI06TaZAz7XHikTkfdqMGeyGCGhKZCA3mLyEOZBPwF9VZBYE1xEo1NfyYC1Cnovm2nhqrgZD
+Instagram account id = 17841460507708499
