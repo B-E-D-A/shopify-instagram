@@ -51,6 +51,4 @@ fun main() {
         .GET()
         .build()
 //    val inst_response = inst_client.send(inst_request, HttpResponse.BodyHandlers.ofString())
-//    val inst_response_body = inst_response.body()
-//    println("Response body: $inst_response_body")
 }
