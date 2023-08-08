@@ -35,8 +35,7 @@ fun instagram_request(uri: URI): HttpResponse<String>{
     return inst_response
 }
 
-fun edit_image_with_text(imagePath: String, text: String): Boolean {
-    try {
+fun edit_image_with_text(imagePath: String, text: String) {
         val imageFile = File(imagePath)
         val image = ImageIO.read(imageFile)
 
@@ -52,11 +51,6 @@ fun edit_image_with_text(imagePath: String, text: String): Boolean {
         graphics.drawString(text, 100, height - 70)
 //        println("$width $height")
         ImageIO.write(image, "jpg", imageFile)
-        return true
-    } catch (e: Exception) {
-        println("Error: ${e.message}")
-        return false
-    }
 }
 
 fun main() {
