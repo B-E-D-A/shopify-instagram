@@ -1,12 +1,16 @@
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import java.awt.Color
+import java.awt.Font
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
-import java.net.http.*
-
-import java.awt.Color
-import java.awt.Font
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import javax.imageio.ImageIO
 
 const val inst_user_id = "17841460507708499"
@@ -23,7 +27,7 @@ fun download_image(image_url_string: String, file_path: String): File {
     return file
 }
 
-fun instagram_request(uri: URI): HttpResponse<String>{
+fun instagram_request_to_post(uri: URI): HttpResponse<String>{
     val inst_request = HttpRequest.newBuilder()
         .uri(uri)
         .POST(HttpRequest.BodyPublishers.noBody())
@@ -35,22 +39,28 @@ fun instagram_request(uri: URI): HttpResponse<String>{
     return inst_response
 }
 
-fun edit_image_with_text(imagePath: String, text: String) {
-        val imageFile = File(imagePath)
-        val image = ImageIO.read(imageFile)
+fun edit_image_with_text(image_file: File, text: String) {
+        val image = ImageIO.read(image_file)
 
         val width = image.width
         val height = image.height
         val graphics = image.createGraphics()
 
-        val font = Font("Arial", Font.BOLD, 28)
-        val color = Color.BLACK
+        val font = Font("San Serif.plain", Font.BOLD, 28)
+/*
+    for (f in GraphicsEnvironment.getLocalGraphicsEnvironment().allFonts) {
+        println("Font: ${f.name}; family: ${f.family}")
+    }
 
+ */
+        val color = Color.WHITE
+        val shadow_color:Color? = color.darker().darker().darker()
         graphics.font = font
+        graphics.color = shadow_color
+        graphics.drawString(text, width/2 - 100, height- 68)
         graphics.color = color
-        graphics.drawString(text, 100, height - 70)
-//        println("$width $height")
-        ImageIO.write(image, "jpg", imageFile)
+        graphics.drawString(text, width/2 - 102, height - 70)
+        ImageIO.write(image, "jpg", image_file)
 }
 
 fun main() {
@@ -75,19 +85,16 @@ fun main() {
     for(item in json_shopify_data["products"]!!.jsonArray) {
         val item_image = download_image(item.jsonObject["image"]!!.jsonObject["src"].toString(), "$root${sep}imagetest.jpg")
         val item_title = item.jsonObject["title"].toString()
+        edit_image_with_text(item_image, item_title.substring(1,item_title.length-1))
 
-        /*
         val caption = ""
         val image_url = "https://i.pinimg.com/originals/83/aa/d3/83aad3e772005d9e7e819229655e4c44.jpg"
 
-        val inst_response_to_create_media =  instagram_request(URI("https://graph.facebook.com/v17.0/$inst_user_id/media?access_token=$inst_access_token&caption=$caption&image_url=$image_url"))
+        val inst_response_to_create_media =  instagram_request_to_post(URI("https://graph.facebook.com/v17.0/$inst_user_id/media?access_token=$inst_access_token&caption=$caption&image_url=$image_url"))
         val json_inst_data: Map<String, JsonElement> = Json.parseToJsonElement(inst_response_to_create_media.body()).jsonObject
         val media_id =  json_inst_data["id"].toString()
-        val inst_response_to_post_media = instagram_request(URI("https://graph.facebook.com/v17.0/$inst_user_id/media_publish?creation_id=${media_id.substring(1, media_id.length - 1)}&access_token=$inst_access_token"))
+        val inst_response_to_post_media = instagram_request_to_post(URI("https://graph.facebook.com/v17.0/$inst_user_id/media_publish?creation_id=${media_id.substring(1, media_id.length - 1)}&access_token=$inst_access_token"))
         println(inst_response_to_post_media.body())
-         */
-
-        edit_image_with_text(item_image.absolutePath, item_title.substring(1,item_title.length-1))
 
     }
 }
