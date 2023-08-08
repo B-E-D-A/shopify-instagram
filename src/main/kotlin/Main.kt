@@ -30,15 +30,6 @@ fun instagram_request(uri: URI): HttpResponse<String>{
     }
     return inst_response
 }
-fun create_instagram_media(caption:String, image_url:String): HttpResponse<String> {
-    val inst_response_to_create_media =  instagram_request(URI("https://graph.facebook.com/v17.0/$inst_user_id/media?access_token=$inst_access_token&caption=$caption&image_url=$image_url"))
-    return inst_response_to_create_media
-}
-
-fun post_instagram_media(media_id:String){
-    val inst_response_to_post_media = instagram_request(URI("https://graph.facebook.com/v17.0/$inst_user_id/media_publish?creation_id=${media_id.substring(1, media_id.length - 1)}&access_token=$inst_access_token"))
-    println(inst_response_to_post_media.body())
-}
 
 fun main() {
 
@@ -66,7 +57,10 @@ fun main() {
         val caption = ""
         val image_url = "https://i.pinimg.com/originals/83/aa/d3/83aad3e772005d9e7e819229655e4c44.jpg"
 
-        val json_inst_data: Map<String, JsonElement> = Json.parseToJsonElement(create_instagram_media(caption, image_url).body()).jsonObject
-        post_instagram_media( json_inst_data["id"].toString())
+        val inst_response_to_create_media =  instagram_request(URI("https://graph.facebook.com/v17.0/$inst_user_id/media?access_token=$inst_access_token&caption=$caption&image_url=$image_url"))
+        val json_inst_data: Map<String, JsonElement> = Json.parseToJsonElement(inst_response_to_create_media.body()).jsonObject
+        val media_id =  json_inst_data["id"].toString()
+        val inst_response_to_post_media = instagram_request(URI("https://graph.facebook.com/v17.0/$inst_user_id/media_publish?creation_id=${media_id.substring(1, media_id.length - 1)}&access_token=$inst_access_token"))
+        println(inst_response_to_post_media.body())
     }
 }
