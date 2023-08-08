@@ -5,6 +5,10 @@ import java.net.URI
 import java.net.URL
 import java.net.http.*
 
+import java.awt.Color
+import java.awt.Font
+import javax.imageio.ImageIO
+
 const val inst_user_id = "17841460507708499"
 const val inst_access_token = "EAAJUFwh4Qu8BOxciCyDmzLXJNhyFtbr3qTqVjZA8r1G8CXV0ZAF8e7QQmsSZCIaE4vWBd5csSr1cRmYZCopj9pqP28zOXQEXbe6T5SC4HNPRYxIvZCZBhpE3ltxplkcIZCEB9afTYkWSucfoyLtBdHpWAiK4CJw1VmI1ENNeWPYZA4UaoGzbm1w2uS6sMePFjZA88kALKsFTw2ei4UthcPyx4yiGMCwZDZD"
 const val shopify_access_token = "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"
@@ -31,6 +35,30 @@ fun instagram_request(uri: URI): HttpResponse<String>{
     return inst_response
 }
 
+fun edit_image_with_text(imagePath: String, text: String): Boolean {
+    try {
+        val imageFile = File(imagePath)
+        val image = ImageIO.read(imageFile)
+
+        val width = image.width
+        val height = image.height
+        val graphics = image.createGraphics()
+
+        val font = Font("Arial", Font.BOLD, 28)
+        val color = Color.BLACK
+
+        graphics.font = font
+        graphics.color = color
+        graphics.drawString(text, 100, height - 70)
+//        println("$width $height")
+        ImageIO.write(image, "jpg", imageFile)
+        return true
+    } catch (e: Exception) {
+        println("Error: ${e.message}")
+        return false
+    }
+}
+
 fun main() {
 
     val shopify_uri = URI("https://eat-shop-sleep-and-repeat.myshopify.com/admin/products.json")
@@ -52,8 +80,9 @@ fun main() {
 
     for(item in json_shopify_data["products"]!!.jsonArray) {
         val item_image = download_image(item.jsonObject["image"]!!.jsonObject["src"].toString(), "$root${sep}imagetest.jpg")
-        val item_title = item.jsonObject["title"]
-        
+        val item_title = item.jsonObject["title"].toString()
+
+        /*
         val caption = ""
         val image_url = "https://i.pinimg.com/originals/83/aa/d3/83aad3e772005d9e7e819229655e4c44.jpg"
 
@@ -62,5 +91,9 @@ fun main() {
         val media_id =  json_inst_data["id"].toString()
         val inst_response_to_post_media = instagram_request(URI("https://graph.facebook.com/v17.0/$inst_user_id/media_publish?creation_id=${media_id.substring(1, media_id.length - 1)}&access_token=$inst_access_token"))
         println(inst_response_to_post_media.body())
+         */
+
+        edit_image_with_text(item_image.absolutePath, item_title.substring(1,item_title.length-1))
+
     }
 }
