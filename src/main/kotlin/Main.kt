@@ -1,27 +1,66 @@
+import kotlinx.serialization.json.*
+import java.io.File
+import java.net.HttpURLConnection
 import java.net.URI
+import java.net.URL
 import java.net.http.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
 
+const val inst_user_id = "17841460507708499"
+const val inst_access_token = "EAAJUFwh4Qu8BOxciCyDmzLXJNhyFtbr3qTqVjZA8r1G8CXV0ZAF8e7QQmsSZCIaE4vWBd5csSr1cRmYZCopj9pqP28zOXQEXbe6T5SC4HNPRYxIvZCZBhpE3ltxplkcIZCEB9afTYkWSucfoyLtBdHpWAiK4CJw1VmI1ENNeWPYZA4UaoGzbm1w2uS6sMePFjZA88kALKsFTw2ei4UthcPyx4yiGMCwZDZD"
+const val shopify_access_token = "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"
+
+val client = HttpClient.newBuilder().build()
+
+fun download_image(image_url_string: String, file_path: String): File {
+    val image_url  = URL(image_url_string.substring(1, image_url_string.length-1))
+    val file = File(file_path)
+    val image_data = image_url.readBytes()
+    file.writeBytes(image_data)
+    return file
+}
+
+fun instagram_request(uri: URI): HttpResponse<String>{
+    val inst_request = HttpRequest.newBuilder()
+        .uri(uri)
+        .POST(HttpRequest.BodyPublishers.noBody())
+        .build()
+    val inst_response = client.send(inst_request, HttpResponse.BodyHandlers.ofString())
+    if (inst_response.statusCode() != HttpURLConnection.HTTP_OK) {
+        throw Exception("fail : ${inst_response.body()}")
+    }
+    return inst_response
+}
 
 fun main() {
-    val access_token = "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"
-    val url = "https://eat-shop-sleep-and-repeat.myshopify.com/admin/products.json"
 
-    val client = HttpClient.newBuilder().build()
-    val request = HttpRequest.newBuilder()
-        .uri(URI.create(url))
-        .header("X-Shopify-Access-Token", access_token)
+    val shopify_uri = URI("https://eat-shop-sleep-and-repeat.myshopify.com/admin/products.json")
+
+    val shopify_request = HttpRequest.newBuilder()
+        .uri(shopify_uri)
+        .header("X-Shopify-Access-Token", shopify_access_token)
         .GET()
         .build()
 
-    val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-    val response_status = response.statusCode();
-    var response_body : String = if (response_status==200) response.body() else "error $response_status"
-    println("Response body: $response_body")
+    val shopify_response = client.send(shopify_request, HttpResponse.BodyHandlers.ofString())
+    if(shopify_response.statusCode() != HttpURLConnection.HTTP_OK){
+        throw Exception("fail : ${shopify_response.body()}")
+    }
+    val json_shopify_data: Map<String, JsonElement> = Json.parseToJsonElement(shopify_response.body()).jsonObject
 
-    val json: Map<String, JsonElement> = Json.parseToJsonElement(response_body).jsonObject
-    println(json["products"]!!.jsonArray[0].jsonObject.keys)
+    val sep = System.getProperty("file.separator")
+    val root = System.getProperty("user.dir")
+
+    for(item in json_shopify_data["products"]!!.jsonArray) {
+        val item_image = download_image(item.jsonObject["image"]!!.jsonObject["src"].toString(), "$root${sep}imagetest.jpg")
+        val item_title = item.jsonObject["title"]
+        
+        val caption = ""
+        val image_url = "https://i.pinimg.com/originals/83/aa/d3/83aad3e772005d9e7e819229655e4c44.jpg"
+
+        val inst_response_to_create_media =  instagram_request(URI("https://graph.facebook.com/v17.0/$inst_user_id/media?access_token=$inst_access_token&caption=$caption&image_url=$image_url"))
+        val json_inst_data: Map<String, JsonElement> = Json.parseToJsonElement(inst_response_to_create_media.body()).jsonObject
+        val media_id =  json_inst_data["id"].toString()
+        val inst_response_to_post_media = instagram_request(URI("https://graph.facebook.com/v17.0/$inst_user_id/media_publish?creation_id=${media_id.substring(1, media_id.length - 1)}&access_token=$inst_access_token"))
+        println(inst_response_to_post_media.body())
+    }
 }
