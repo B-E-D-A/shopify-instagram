@@ -9,7 +9,7 @@ import java.nio.file.Files
 import javax.imageio.ImageIO
 
 const val inst_user_id = "17841460507708499"
-const val inst_access_token = "EAAJUFwh4Qu8BOxciCyDmzLXJNhyFtbr3qTqVjZA8r1G8CXV0ZAF8e7QQmsSZCIaE4vWBd5csSr1cRmYZCopj9pqP28zOXQEXbe6T5SC4HNPRYxIvZCZBhpE3ltxplkcIZCEB9afTYkWSucfoyLtBdHpWAiK4CJw1VmI1ENNeWPYZA4UaoGzbm1w2uS6sMePFjZA88kALKsFTw2ei4UthcPyx4yiGMCwZDZD"
+const val inst_access_token = "EAAJUFwh4Qu8BO8CRWhOhqeZAackEFon2MselCNCqhIG9lcCrPOcT4976ZCcBZBTPAqM7gLYrm4ZA2Yu1283zx1sWF5VZCBQqAWKPRX5NSveCuy1uyKMG57f34vZBNZAKhBZCrcqdLTgoYCrVgvvRGmlBzZA6nKyXAbzAr007KkeUKygS7AU1dThYaYwA2ZBzvXQbIKRA2FmjwDdqelRZAacF9ZAl5rXR"
 const val shopify_access_token = "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"
 
 val client = HttpClient.newBuilder().build()
@@ -84,24 +84,24 @@ fun main() {
 
         val s3_bucket_name="shop-and-swap-pics"
         val item_image_data = Files.readAllBytes(item_image.toPath())
-        val s3_request = HttpRequest.newBuilder()
-            .uri(URI("https://ka3xs73p6a.execute-api.eu-west-2.amazonaws.com/dev/$s3_bucket_name/image$i.jpeg"))
+        val s3_request_to_upload = HttpRequest.newBuilder()
+            .uri(URI("https://ka3xs73p6a.execute-api.eu-west-2.amazonaws.com/dev2/$s3_bucket_name/image$i.jpeg"))
             .PUT(HttpRequest.BodyPublishers.ofByteArray(item_image_data))
             .header("Content-Type", "image/jpeg")
             .build()
 
-        val s3_response = client.send(s3_request, HttpResponse.BodyHandlers.ofString())
-        if(s3_response.statusCode() != HttpURLConnection.HTTP_OK){
-            throw Exception("fail : ${s3_response.body()}")
+        val s3_response_to_upload = client.send(s3_request_to_upload, HttpResponse.BodyHandlers.ofString())
+        if(s3_response_to_upload.statusCode() != HttpURLConnection.HTTP_OK){
+            throw Exception("fail : ${s3_response_to_upload.body()}")
         }
         else{
-            println(s3_response.body().toString())
-            println("OK")
+            println(s3_response_to_upload.body().toString())
+            println("OK1")
         }
 
+        val image_url = "https://shop-and-swap-pics.s3.eu-west-2.amazonaws.com/image$i.jpeg"
+//        println(image_url)
         val caption = ""
-        val image_url = "https://i.pinimg.com/originals/83/aa/d3/83aad3e772005d9e7e819229655e4c44.jpg"
-
         val inst_response_to_create_media =  instagram_request_to_post(URI("https://graph.facebook.com/v17.0/$inst_user_id/media?access_token=$inst_access_token&caption=$caption&image_url=$image_url"))
         val json_inst_data: Map<String, JsonElement> = Json.parseToJsonElement(inst_response_to_create_media.body()).jsonObject
         val media_id =  json_inst_data["id"].toString()
