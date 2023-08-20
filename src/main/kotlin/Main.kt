@@ -1,16 +1,11 @@
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import java.awt.Color
-import java.awt.Font
+import kotlinx.serialization.json.*
+import java.awt.*
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
+import java.net.http.*
+import java.nio.file.Files
 import javax.imageio.ImageIO
 
 const val inst_user_id = "17841460507708499"
@@ -81,11 +76,28 @@ fun main() {
 
     val sep = System.getProperty("file.separator")
     val root = System.getProperty("user.dir")
-
+    val i = 1
     for(item in json_shopify_data["products"]!!.jsonArray) {
-        val item_image = download_image(item.jsonObject["image"]!!.jsonObject["src"].toString(), "$root${sep}imagetest.jpg")
+        val item_image = download_image(item.jsonObject["image"]!!.jsonObject["src"].toString(), "$root${sep}image$i.jpg")
         val item_title = item.jsonObject["title"].toString()
         edit_image_with_text(item_image, item_title.substring(1,item_title.length-1))
+
+        val s3_bucket_name="shop-and-swap-pics"
+        val item_image_data = Files.readAllBytes(item_image.toPath())
+        val s3_request = HttpRequest.newBuilder()
+            .uri(URI("https://ka3xs73p6a.execute-api.eu-west-2.amazonaws.com/dev/$s3_bucket_name/image$i.jpeg"))
+            .PUT(HttpRequest.BodyPublishers.ofByteArray(item_image_data))
+            .header("Content-Type", "image/jpeg")
+            .build()
+
+        val s3_response = client.send(s3_request, HttpResponse.BodyHandlers.ofString())
+        if(s3_response.statusCode() != HttpURLConnection.HTTP_OK){
+            throw Exception("fail : ${s3_response.body()}")
+        }
+        else{
+            println(s3_response.body().toString())
+            println("OK")
+        }
 
         val caption = ""
         val image_url = "https://i.pinimg.com/originals/83/aa/d3/83aad3e772005d9e7e819229655e4c44.jpg"
