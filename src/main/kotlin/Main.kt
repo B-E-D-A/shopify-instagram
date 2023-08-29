@@ -9,7 +9,7 @@ import java.nio.file.Files
 import javax.imageio.ImageIO
 
 const val inst_user_id = "17841460507708499"
-const val inst_access_token = "EAAJUFwh4Qu8BO8CRWhOhqeZAackEFon2MselCNCqhIG9lcCrPOcT4976ZCcBZBTPAqM7gLYrm4ZA2Yu1283zx1sWF5VZCBQqAWKPRX5NSveCuy1uyKMG57f34vZBNZAKhBZCrcqdLTgoYCrVgvvRGmlBzZA6nKyXAbzAr007KkeUKygS7AU1dThYaYwA2ZBzvXQbIKRA2FmjwDdqelRZAacF9ZAl5rXR"
+const val inst_access_token = "EAAJUFwh4Qu8BO4qzBv7WMnGiOxrqZAnAVyl9yJ1H1rTPPjvGfzxwsNRpAzaKj7dc5ZAMcgbJaGwoqqO8tB2RoXXf0DYWyM7KaKYAJvcs6UEM23ANp7XExVtAgZAYPU3VzBIEMQTDjDYxNtH0eJkD6EKuovcPSamXCtA4zdTxkYlzDdXL8fWNYBGMNkd0gRMoOSFFw00BH8yqohHgJQC6AaxMwZDZD"
 const val shopify_access_token = "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"
 
 val client = HttpClient.newBuilder().build()
@@ -42,12 +42,6 @@ fun edit_image_with_text(image_file: File, text: String) {
         val graphics = image.createGraphics()
 
         val font = Font("San Serif.plain", Font.BOLD, 28)
-/*
-    for (f in GraphicsEnvironment.getLocalGraphicsEnvironment().allFonts) {
-        println("Font: ${f.name}; family: ${f.family}")
-    }
-
- */
         val color = Color.WHITE
         val shadow_color:Color? = color.darker().darker().darker()
         graphics.font = font
@@ -76,7 +70,7 @@ fun main() {
 
     val sep = System.getProperty("file.separator")
     val root = System.getProperty("user.dir")
-    val i = 1
+    var i = 1
     for(item in json_shopify_data["products"]!!.jsonArray) {
         val item_image = download_image(item.jsonObject["image"]!!.jsonObject["src"].toString(), "$root${sep}image$i.jpg")
         val item_title = item.jsonObject["title"].toString()
@@ -85,7 +79,7 @@ fun main() {
         val s3_bucket_name="shop-and-swap-pics"
         val item_image_data = Files.readAllBytes(item_image.toPath())
         val s3_request_to_upload = HttpRequest.newBuilder()
-            .uri(URI("https://ka3xs73p6a.execute-api.eu-west-2.amazonaws.com/dev2/$s3_bucket_name/image$i.jpeg"))
+            .uri(URI("https://ka3xs73p6a.execute-api.eu-west-2.amazonaws.com/dev2/$s3_bucket_name/imagetest$i.jpeg"))
             .PUT(HttpRequest.BodyPublishers.ofByteArray(item_image_data))
             .header("Content-Type", "image/jpeg")
             .build()
@@ -94,19 +88,13 @@ fun main() {
         if(s3_response_to_upload.statusCode() != HttpURLConnection.HTTP_OK){
             throw Exception("fail : ${s3_response_to_upload.body()}")
         }
-        else{
-            println(s3_response_to_upload.body().toString())
-            println("OK1")
-        }
 
-        val image_url = "https://shop-and-swap-pics.s3.eu-west-2.amazonaws.com/image$i.jpeg"
-//        println(image_url)
+        val image_url = "https://shop-and-swap-pics.s3.eu-west-2.amazonaws.com/imagetest$i.jpeg"
         val caption = ""
-        val inst_response_to_create_media =  instagram_request_to_post(URI("https://graph.facebook.com/v17.0/$inst_user_id/media?access_token=$inst_access_token&caption=$caption&image_url=$image_url"))
+        val inst_response_to_create_media =  instagram_request_to_post(URI("https://graph.facebook.com/v17.0/$inst_user_id/media?access_token=$inst_access_token&caption=$caption&image_url=$image_url&media_type=STORIES"))
         val json_inst_data: Map<String, JsonElement> = Json.parseToJsonElement(inst_response_to_create_media.body()).jsonObject
         val media_id =  json_inst_data["id"].toString()
         val inst_response_to_post_media = instagram_request_to_post(URI("https://graph.facebook.com/v17.0/$inst_user_id/media_publish?creation_id=${media_id.substring(1, media_id.length - 1)}&access_token=$inst_access_token"))
-        println(inst_response_to_post_media.body())
-
+        i += 1
     }
 }
