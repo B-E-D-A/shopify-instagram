@@ -6,6 +6,7 @@ import java.net.URI
 import java.net.URL
 import java.net.http.*
 import java.nio.file.Files
+import java.time.LocalDate
 import javax.imageio.ImageIO
 
 const val inst_user_id = "17841460507708499"
@@ -39,22 +40,43 @@ fun edit_image_with_text(image_file: File, text: String) {
 
         val width = image.width
         val height = image.height
-        val graphics = image.createGraphics()
 
-        val font = Font("San Serif.plain", Font.BOLD, 28)
-        val color = Color.WHITE
-        val shadow_color:Color? = color.darker().darker().darker()
-        graphics.font = font
-        graphics.color = shadow_color
-        graphics.drawString(text, width/2 - 100, height- 68)
-        graphics.color = color
-        graphics.drawString(text, width/2 - 102, height - 70)
-        ImageIO.write(image, "jpg", image_file)
+        val graphics = image.createGraphics()
+    graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+    graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
+    val font = Font.createFont(Font.TRUETYPE_FONT, File("C:\\Users\\HUAWEI\\Downloads\\Roboto\\Roboto-Regular.ttf"))
+//    val font = Font.createFont(Font.TRUETYPE_FONT, File("C:\\Users\\HUAWEI\\Downloads\\Black_Ops_One\\BlackOpsOne-Regular.ttf"))
+//    val font = Font.createFont(Font.TRUETYPE_FONT, File("C:\\Users\\HUAWEI\\Downloads\\Phudu\\Phudu-VariableFont_wght.ttf"))
+
+    val color = Color.WHITE
+    val shadow_color:Color? = color.darker().darker().darker()
+    val dark_shadow_color:Color? = Color.BLACK
+
+    val font_size = 42
+    val font_style = Font.BOLD
+    val custom_font = font.deriveFont(font_style, font_size.toFloat())
+    graphics.font = custom_font
+    graphics.color = dark_shadow_color
+    val fontMetrics = graphics.fontMetrics
+    val textWidth = fontMetrics.stringWidth(text)
+    val x = (width - textWidth) / 2
+    graphics.drawString(text, x + 2, height - 68)
+    graphics.color = color
+    graphics.drawString(text, x, height - 70)
+
+    ImageIO.write(image, "jpg", image_file)
+    graphics.dispose()
 }
 
 fun main() {
 
-    val shopify_uri = URI("https://eat-shop-sleep-and-repeat.myshopify.com/admin/products.json")
+    val currentDate = LocalDate.now()
+    val year = currentDate.year
+    val month = currentDate.monthValue
+    val day = currentDate.dayOfMonth
+
+    val createdAtMin = "$year-$month-${day}T00:00:00-00:00"
+    val shopify_uri = URI("https://eat-shop-sleep-and-repeat.myshopify.com/admin/products.json?created_at_min=$createdAtMin")
 
     val shopify_request = HttpRequest.newBuilder()
         .uri(shopify_uri)
@@ -67,6 +89,8 @@ fun main() {
         throw Exception("fail : ${shopify_response.body()}")
     }
     val json_shopify_data: Map<String, JsonElement> = Json.parseToJsonElement(shopify_response.body()).jsonObject
+    println(json_shopify_data.keys)
+    println(shopify_response.body().toString())
 
     val sep = System.getProperty("file.separator")
     val root = System.getProperty("user.dir")
@@ -76,10 +100,10 @@ fun main() {
         val item_title = item.jsonObject["title"].toString()
         edit_image_with_text(item_image, item_title.substring(1,item_title.length-1))
 
-        val s3_bucket_name="shop-and-swap-pics"
+             val s3_bucket_name="shop-and-swap-pics"
         val item_image_data = Files.readAllBytes(item_image.toPath())
         val s3_request_to_upload = HttpRequest.newBuilder()
-            .uri(URI("https://ka3xs73p6a.execute-api.eu-west-2.amazonaws.com/dev2/$s3_bucket_name/imagetest$i.jpeg"))
+            .uri(URI("https://ka3xs73p6a.execute-api.eu-west-2.amazonaws.com/dev2/$s3_bucket_name/image$i.jpeg"))
             .PUT(HttpRequest.BodyPublishers.ofByteArray(item_image_data))
             .header("Content-Type", "image/jpeg")
             .build()
@@ -89,7 +113,7 @@ fun main() {
             throw Exception("fail : ${s3_response_to_upload.body()}")
         }
 
-        val image_url = "https://shop-and-swap-pics.s3.eu-west-2.amazonaws.com/imagetest$i.jpeg"
+        val image_url = "https://shop-and-swap-pics.s3.eu-west-2.amazonaws.com/image$i.jpeg"
         val caption = ""
         val inst_response_to_create_media =  instagram_request_to_post(URI("https://graph.facebook.com/v17.0/$inst_user_id/media?access_token=$inst_access_token&caption=$caption&image_url=$image_url&media_type=STORIES"))
         val json_inst_data: Map<String, JsonElement> = Json.parseToJsonElement(inst_response_to_create_media.body()).jsonObject
