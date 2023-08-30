@@ -89,8 +89,8 @@ fun main() {
         throw Exception("fail : ${shopify_response.body()}")
     }
     val json_shopify_data: Map<String, JsonElement> = Json.parseToJsonElement(shopify_response.body()).jsonObject
-    println(json_shopify_data.keys)
-    println(shopify_response.body().toString())
+//    println(json_shopify_data.keys)
+//    println(shopify_response.body().toString())
 
     val sep = System.getProperty("file.separator")
     val root = System.getProperty("user.dir")
