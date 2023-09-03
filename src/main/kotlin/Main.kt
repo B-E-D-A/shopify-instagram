@@ -10,7 +10,7 @@ import java.time.LocalDate
 import javax.imageio.ImageIO
 
 const val inst_user_id = "17841460507708499"
-const val inst_access_token = "EAAJUFwh4Qu8BO4qzBv7WMnGiOxrqZAnAVyl9yJ1H1rTPPjvGfzxwsNRpAzaKj7dc5ZAMcgbJaGwoqqO8tB2RoXXf0DYWyM7KaKYAJvcs6UEM23ANp7XExVtAgZAYPU3VzBIEMQTDjDYxNtH0eJkD6EKuovcPSamXCtA4zdTxkYlzDdXL8fWNYBGMNkd0gRMoOSFFw00BH8yqohHgJQC6AaxMwZDZD"
+const val inst_access_token = "EAAJUFwh4Qu8BO2znalipZBd1ZBGFuOBj14OUNSfKuXhvaNKbZB5ViecDnKC5Wcyv6Yqjh12WUP7y96eE8ZCxy3Itk9XpBjjmB0VyMbHAez41mVR08dBxZCaZBnYp8ZCWrO61ZAjjT4SSMXxec9Krgj1dn9FPsGTi0sLTd3SV7YwRr2nfz9o1G1jpHmEgw3AoZCJ0m82FtywAYe5mYlIwKZCZAv4BC1FDQZDZD"
 const val shopify_access_token = "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"
 
 val client = HttpClient.newBuilder().build()
@@ -36,22 +36,16 @@ fun instagram_request_to_post(uri: URI): HttpResponse<String>{
 }
 
 fun edit_image_with_text(image_file: File, text: String) {
-        val image = ImageIO.read(image_file)
-
-        val width = image.width
-        val height = image.height
-
-        val graphics = image.createGraphics()
+    val image = ImageIO.read(image_file)
+    val width = image.width
+    val height = image.height
+    val graphics = image.createGraphics()
     graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
     graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
     val font = Font.createFont(Font.TRUETYPE_FONT, File("C:\\Users\\HUAWEI\\Downloads\\Roboto\\Roboto-Regular.ttf"))
-//    val font = Font.createFont(Font.TRUETYPE_FONT, File("C:\\Users\\HUAWEI\\Downloads\\Black_Ops_One\\BlackOpsOne-Regular.ttf"))
-//    val font = Font.createFont(Font.TRUETYPE_FONT, File("C:\\Users\\HUAWEI\\Downloads\\Phudu\\Phudu-VariableFont_wght.ttf"))
 
     val color = Color.WHITE
-    val shadow_color:Color? = color.darker().darker().darker()
     val dark_shadow_color:Color? = Color.BLACK
-
     val font_size = 42
     val font_style = Font.BOLD
     val custom_font = font.deriveFont(font_style, font_size.toFloat())
@@ -74,9 +68,8 @@ fun main() {
     val year = currentDate.year
     val month = currentDate.monthValue
     val day = currentDate.dayOfMonth
-
-    val createdAtMin = "$year-$month-${day}T00:00:00-00:00"
-    val shopify_uri = URI("https://eat-shop-sleep-and-repeat.myshopify.com/admin/products.json?created_at_min=$createdAtMin")
+    val created_at_min = "$year-$month-${day}T00:00:00-00:00"
+    val shopify_uri = URI("https://eat-shop-sleep-and-repeat.myshopify.com/admin/products.json?created_at_min=$created_at_min")
 
     val shopify_request = HttpRequest.newBuilder()
         .uri(shopify_uri)
@@ -89,8 +82,6 @@ fun main() {
         throw Exception("fail : ${shopify_response.body()}")
     }
     val json_shopify_data: Map<String, JsonElement> = Json.parseToJsonElement(shopify_response.body()).jsonObject
-//    println(json_shopify_data.keys)
-//    println(shopify_response.body().toString())
 
     val sep = System.getProperty("file.separator")
     val root = System.getProperty("user.dir")
@@ -100,7 +91,7 @@ fun main() {
         val item_title = item.jsonObject["title"].toString()
         edit_image_with_text(item_image, item_title.substring(1,item_title.length-1))
 
-             val s3_bucket_name="shop-and-swap-pics"
+        val s3_bucket_name="shop-and-swap-pics"
         val item_image_data = Files.readAllBytes(item_image.toPath())
         val s3_request_to_upload = HttpRequest.newBuilder()
             .uri(URI("https://ka3xs73p6a.execute-api.eu-west-2.amazonaws.com/dev2/$s3_bucket_name/image$i.jpeg"))
@@ -118,7 +109,7 @@ fun main() {
         val inst_response_to_create_media =  instagram_request_to_post(URI("https://graph.facebook.com/v17.0/$inst_user_id/media?access_token=$inst_access_token&caption=$caption&image_url=$image_url&media_type=STORIES"))
         val json_inst_data: Map<String, JsonElement> = Json.parseToJsonElement(inst_response_to_create_media.body()).jsonObject
         val media_id =  json_inst_data["id"].toString()
-        val inst_response_to_post_media = instagram_request_to_post(URI("https://graph.facebook.com/v17.0/$inst_user_id/media_publish?creation_id=${media_id.substring(1, media_id.length - 1)}&access_token=$inst_access_token"))
+        instagram_request_to_post(URI("https://graph.facebook.com/v17.0/$inst_user_id/media_publish?creation_id=${media_id.substring(1, media_id.length - 1)}&access_token=$inst_access_token"))
         i += 1
     }
 }
